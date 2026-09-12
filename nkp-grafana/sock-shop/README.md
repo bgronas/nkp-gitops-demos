@@ -21,7 +21,7 @@ The dashboard queries `ThanosQuery` and exposes `cluster` and `namespace` variab
 
 ## Apply manually
 
-From the repository root, run a server-side dry run first:
+Run a server-side dry run first:
 
 ```bash
 kubectl --context nkp-demo-mgmt-admin@nkp-demo-mgmt \
@@ -35,11 +35,13 @@ kubectl --context nkp-demo-mgmt-admin@nkp-demo-mgmt \
   apply -k nkp-grafana/sock-shop
 ```
 
-Or run:
+Or use the guarded helper script from any working directory:
 
 ```bash
-./nkp-grafana/sock-shop/apply.sh
+bash ./nkp-grafana/sock-shop/apply.sh
 ```
+
+The script verifies the kubectl context and the `kommander` namespace, performs a server-side dry run, and asks for confirmation before applying.
 
 ## GitOps
 
