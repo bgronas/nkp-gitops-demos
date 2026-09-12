@@ -1,37 +1,34 @@
 # NKP monitoring enablement for `nkp-demo-01`
 
-This directory enables the NKP monitoring platform applications for the `nkp-demo-01` workload cluster from the `other-project-rxmz5` project namespace on the management cluster.
+This directory enables NKP monitoring for the `nkp-demo-01` workload cluster at **workspace scope**.
 
-The bundle mirrors the working application set used by the `nai-demo` project:
+## Why workspace scope
+
+`kube-prometheus-stack` and `prometheus-adapter` create cluster-scoped resources. Deploying them from the project namespace `other-project-rxmz5` caused two policy/RBAC failures:
+
+- `kube-prometheus-stack`: the project service account could not patch cluster-scoped `ClusterRole` resources.
+- `prometheus-adapter`: Gatekeeper rejected the generated `HelmRelease` because it had no `serviceAccountName`.
+
+NKP documentation requires platform applications to be enabled at workspace level before per-cluster configuration. The correct workspace namespace for this environment is:
+
+```text
+kommander-default-workspace
+```
+
+The target cluster remains restricted to:
+
+```text
+nkp-demo-01
+```
+
+## Applications
 
 - `kube-prometheus-stack` `82.13.6`
 - `prometheus-adapter` `5.3.0`
-- `prometheus-thanos-traefik` `0.0.5`
 
-All three `AppDeployment` resources are restricted by:
+`prometheus-thanos-traefik` is **not** created by this bundle because it already exists and is healthy at workspace scope for `nkp-demo-01`.
 
-```yaml
-clusterSelector:
-  matchExpressions:
-    - key: kommander.d2iq.io/cluster-name
-      operator: In
-      values:
-        - nkp-demo-01
-```
-
-The resources are created in the NKP project namespace:
-
-```text
-other-project-rxmz5
-```
-
-## Why this exists
-
-`nkp-demo-01` did not have a `kube-prometheus-stack` HelmRelease, and centralized Thanos returned no `kube_pod_info` or `container_cpu_usage_seconds_total` series for `other-project-rxmz5`. The project also had no `AppDeployment` resources.
-
-This is a platform-level change: applying this bundle instructs NKP to reconcile the monitoring stack onto `nkp-demo-01`. It does not modify the Sock Shop application manifests.
-
-## Apply safely
+## Apply
 
 From the repository root:
 
@@ -39,34 +36,46 @@ From the repository root:
 bash ./nkp-platform/monitoring/nkp-demo-01/apply.sh
 ```
 
-The script performs:
+The script performs a server-side dry run and `kubectl diff` before asking for confirmation.
 
-1. management-context validation;
-2. project-namespace validation;
-3. server-side dry-run;
-4. `kubectl diff`;
-5. explicit confirmation before apply.
-
-## Verify after apply
+## Verify
 
 Management cluster:
 
 ```bash
 kubectl --context nkp-demo-mgmt-admin@nkp-demo-mgmt \
-  -n other-project-rxmz5 get appdeployments
+  -n kommander-default-workspace \
+  get appdeployments \
+  -o custom-columns='NAME:.metadata.name,APP:.spec.appRef.name,CLUSTERS:.status.clusters[*].name' \
+  | grep -E 'NAME|kube-prometheus-stack|prometheus-adapter|prometheus-thanos-traefik'
 ```
 
 Workload cluster:
 
 ```bash
 kubectl --context nkp-demo-01-admin@nkp-demo-01 \
-  get helmreleases.helm.toolkit.fluxcd.io -A \
-  | grep -E 'prometheus|thanos'
+  get kustomizations.kustomize.toolkit.fluxcd.io -A \
+  | grep -E 'kube-prometheus|prometheus-adapter|prometheus-thanos'
 ```
-
-Then check that Prometheus and kube-state-metrics Pods appear:
 
 ```bash
 kubectl --context nkp-demo-01-admin@nkp-demo-01 \
-  get pods -A | grep -E 'prometheus|kube-state'
+  get helmreleases.helm.toolkit.fluxcd.io -A \
+  | grep -E 'kube-prometheus|prometheus-adapter|prometheus-thanos'
 ```
+
+## Remove the earlier project-scoped attempt
+
+After the workspace-scoped `kube-prometheus-stack` and `prometheus-adapter` are Ready, remove the earlier project-scoped AppDeployments:
+
+```bash
+bash ./nkp-platform/monitoring/nkp-demo-01/cleanup-project-scope.sh
+```
+
+This deletes only these AppDeployments from `other-project-rxmz5`:
+
+- `kube-prometheus-stack`
+- `prometheus-adapter`
+- `prometheus-thanos-traefik`
+
+The existing workspace-scoped `prometheus-thanos-traefik` remains untouched.
