@@ -1,0 +1,25 @@
+apiVersion: apps.kommander.d2iq.io/v1alpha3
+kind: AppDeployment
+metadata:
+  name: prometheus-adapter
+  namespace: other-project-rxmz5
+spec:
+  appRef:
+    appID: prometheus-adapter
+    kind: ClusterApp
+    name: prometheus-adapter-5.3.0
+  clusterConfigOverrides:
+    - appVersion: 5.3.0
+      clusterSelector:
+        matchExpressions:
+          - key: kommander.d2iq.io/cluster-name
+            operator: In
+            values:
+              - nkp-demo-01
+      configMapName: ""
+  clusterSelector:
+    matchExpressions:
+      - key: kommander.d2iq.io/cluster-name
+        operator: In
+        values:
+          - nkp-demo-01
