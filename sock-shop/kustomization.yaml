@@ -8,7 +8,6 @@ resources:
   - base/catalogue-dep.yaml
   - base/catalogue-svc.yaml
   - base/front-end-dep.yaml
-  - base/front-end-ingress.yaml
   - base/front-end-svc.yaml
   - base/orders-db-dep.yaml
   - base/orders-db-svc.yaml
