@@ -1,60 +1,56 @@
-# NKP centralized Grafana — Sock Shop dashboard
+# NKP centralized Grafana — workload namespace dashboard
 
-This directory provisions the Sock Shop dashboard into **NKP centralized Grafana**.
+This directory provisions one additional dashboard into **NKP centralized Grafana** on the management cluster. It does not change the Grafana, Prometheus, Thanos, NKP, or workload-cluster configuration.
 
-## Why this is separate from `sock-shop/`
+## Target
 
-The Sock Shop application belongs on a workload cluster. NKP centralized Grafana belongs on the management cluster.
+- Management cluster: `nkp-demo-mgmt`
+- kubectl context: `nkp-demo-mgmt-admin@nkp-demo-mgmt`
+- NKP workspace namespace: `kommander`
+- Grafana datasource: `ThanosQuery`
 
-The centralized Grafana sidecar watches ConfigMaps labelled:
+The centralized Grafana sidecar discovers ConfigMaps labelled:
 
 ```yaml
 grafana_dashboard_kommander: "1"
 ```
 
-Do not add this Kustomization to `sock-shop/kustomization.yaml` unless that source is explicitly reconciled on the management cluster.
+## Multi-cluster behaviour
 
-## Apply on the NKP management cluster
+The dashboard queries `ThanosQuery` and exposes `cluster` and `namespace` variables. Both default to `All`, so the dashboard is not tied to the current Sock Shop project namespace or to one workload cluster. Select the Sock Shop workload cluster and project namespace in Grafana for the demo.
 
-Dry run:
+## Apply manually
 
-```bash
-kubectl --context <management-cluster> apply --dry-run=server -k nkp-grafana/sock-shop
-```
-
-Apply:
+From the repository root, run a server-side dry run first:
 
 ```bash
-kubectl --context <management-cluster> apply -k nkp-grafana/sock-shop
+kubectl --context nkp-demo-mgmt-admin@nkp-demo-mgmt \
+  apply --dry-run=server -k nkp-grafana/sock-shop
 ```
 
-Or create a dedicated NKP/Flux GitOps source that targets the management cluster and path:
+Then apply:
+
+```bash
+kubectl --context nkp-demo-mgmt-admin@nkp-demo-mgmt \
+  apply -k nkp-grafana/sock-shop
+```
+
+Or run:
+
+```bash
+./nkp-grafana/sock-shop/apply.sh
+```
+
+## GitOps
+
+For GitOps, create a dedicated source/reconciliation that targets the **management cluster** and this path:
 
 ```text
 ./nkp-grafana/sock-shop
 ```
 
-## Datasource
+Do not add this Kustomization to `sock-shop/kustomization.yaml`; the Sock Shop application belongs on a workload cluster while centralized Grafana runs on the management cluster.
 
-The dashboard expects the NKP centralized Grafana datasource:
+## Dashboard reference
 
-```text
-ThanosQuery
-```
-
-It filters on NKP's `cluster` external label and the Kubernetes `namespace`.
-
-## Default namespace
-
-The dashboard defaults to:
-
-```text
-other-project-rxmz5
-```
-
-If the generated project namespace differs, select it from the dashboard variable.
-
-## Visual reference
-
-Grafana.com dashboard `15758` — Kubernetes / Views / Namespaces.
-The checked-in dashboard is intentionally tuned for NKP and Sock Shop rather than copied unmodified.
+The dashboard design is based on the Grafana.com Kubernetes Views namespace dashboard family and is adapted for NKP centralized Grafana/Thanos rather than copied unmodified.
