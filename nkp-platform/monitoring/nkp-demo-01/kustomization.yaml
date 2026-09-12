@@ -4,4 +4,3 @@ kind: Kustomization
 resources:
   - kube-prometheus-stack.yaml
   - prometheus-adapter.yaml
-  - prometheus-thanos-traefik.yaml
