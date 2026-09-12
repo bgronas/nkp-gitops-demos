@@ -1,0 +1,25 @@
+apiVersion: apps.kommander.d2iq.io/v1alpha3
+kind: AppDeployment
+metadata:
+  name: kube-prometheus-stack
+  namespace: other-project-rxmz5
+spec:
+  appRef:
+    appID: kube-prometheus-stack
+    kind: ClusterApp
+    name: kube-prometheus-stack-82.13.6
+  clusterConfigOverrides:
+    - appVersion: 82.13.6
+      clusterSelector:
+        matchExpressions:
+          - key: kommander.d2iq.io/cluster-name
+            operator: In
+            values:
+              - nkp-demo-01
+      configMapName: ""
+  clusterSelector:
+    matchExpressions:
+      - key: kommander.d2iq.io/cluster-name
+        operator: In
+        values:
+          - nkp-demo-01
