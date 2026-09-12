@@ -2,7 +2,7 @@ apiVersion: apps.kommander.d2iq.io/v1alpha3
 kind: AppDeployment
 metadata:
   name: kube-prometheus-stack
-  namespace: other-project-rxmz5
+  namespace: kommander-default-workspace
 spec:
   appRef:
     appID: kube-prometheus-stack
