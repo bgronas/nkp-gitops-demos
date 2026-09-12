@@ -6,9 +6,12 @@ metadata:
   labels:
     name: front-end
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  externalTrafficPolicy: Local
   ports:
-    - port: 80
+    - name: http
+      protocol: TCP
+      port: 8080
       targetPort: 8079
   selector:
     name: front-end
