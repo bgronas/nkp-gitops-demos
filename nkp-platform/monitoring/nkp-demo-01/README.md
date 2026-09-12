@@ -1,5 +1,7 @@
 # NKP monitoring enablement for `nkp-demo-01`
 
+For the complete end-to-end procedure, architecture, validation commands, failure modes, rollback and final design, see [`docs/NKP-SOCK-SHOP-OBSERVABILITY.md`](../../../docs/NKP-SOCK-SHOP-OBSERVABILITY.md).
+
 This directory enables NKP monitoring for the `nkp-demo-01` workload cluster at **workspace scope**.
 
 ## Why workspace scope
@@ -9,7 +11,7 @@ This directory enables NKP monitoring for the `nkp-demo-01` workload cluster at 
 - `kube-prometheus-stack`: the project service account could not patch cluster-scoped `ClusterRole` resources.
 - `prometheus-adapter`: Gatekeeper rejected the generated `HelmRelease` because it had no `serviceAccountName`.
 
-NKP documentation requires platform applications to be enabled at workspace level before per-cluster configuration. The correct workspace namespace for this environment is:
+The correct workspace namespace for this environment is:
 
 ```text
 kommander-default-workspace
